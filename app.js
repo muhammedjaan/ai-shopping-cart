@@ -1,38 +1,118 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>SmartCart Pro🛒</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-</head>
-<body>
-  <header>
-    <h1>SmartCart Pro🛒</h1>
-    <div id="status-indicator"></div>
-  </header>
+const products = {
+    "0123456789012": { name: "Fresh Milk", price: 1.50 },
+    "1234567890123": { name: "Whole Grain Bread", price: 1.00 },
+    "2345678901234": { name: "Potato Chips", price: 2.00 },
+    "049000028203": { name: "Coca Cola", price: 1.25 } 
+};
 
-  <div id="scanner-container">
-    <div id="scanner"></div>
-    <div class="overlay"></div>
-  </div>
+let cart = [];
+let total = 0;
+let isPaused = false;
 
-  <div id="feedback-msg">Initializing Camera...</div>
+// 1. Initialize with Fallback logic
+function startScanner() {
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector("#scanner"),
+            constraints: {
+                // If 'environment' fails, the browser will fall back to any available camera
+                facingMode: "environment", 
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            willReadFrequently: true
+        },
+        decoder: {
+            readers: ["ean_reader", "upc_reader", "code_128_reader"]
+        }
+    }, function(err) {
+        if (err) {
+            console.error("Quagga Startup Error:", err);
+            document.getElementById("feedback-msg").innerText = "Camera Error: Please Refresh & Allow Access";
+            return;
+        }
+        Quagga.start();
+        document.getElementById("feedback-msg").innerText = "Ready to Scan";
+    });
 
-  <section class="cart-section">
-    <h2>Your Basket</h2>
-    <div class="cart-scroll">
-        <ul id="cart"></ul>
-    </div>
-    <div class="total-bar">
-        <h3>Total: $<span id="total">0.00</span></h3>
-        <button id="checkout-btn" onclick="checkout()">Finish & Print</button>
-    </div>
-  </section>
+    Quagga.onDetected(handleScan);
+}
 
-  <audio id="beep-sound" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3" preload="auto"></audio>
+// 2. Scan Logic
+function handleScan(data) {
+    if (isPaused) return;
 
-  <script src="app.js"></script>
-</body>
-</html>
+    const code = data.codeResult.code;
+    const item = products[code];
+
+    if (item) {
+        addtoBasket(item);
+        showFeedback(item.name);
+    }
+}
+
+function addtoBasket(item) {
+    cart.push(item);
+    total += item.price;
+
+    const list = document.getElementById("cart");
+    const li = document.createElement("li");
+    li.innerHTML = `<span>${item.name}</span> <strong>$${item.price.toFixed(2)}</strong>`;
+    list.prepend(li); // New items at the top
+
+    document.getElementById("total").innerText = total.toFixed(2);
+}
+
+// 3. Audio & Visual Feedback
+function showFeedback(name) {
+    isPaused = true;
+    
+    // Play beep
+    const beep = document.getElementById("beep-sound");
+    beep.currentTime = 0;
+    beep.play().catch(() => console.log("Sound interaction required"));
+
+    // Phone vibration
+    if (navigator.vibrate) navigator.vibrate(100);
+
+    const msg = document.getElementById("feedback-msg");
+    msg.innerText = `Added ${name}!`;
+    msg.style.color = "#2ecc71";
+
+    setTimeout(() => {
+        isPaused = false;
+        msg.innerText = "Scanning...";
+        msg.style.color = "inherit";
+    }, 2000);
+}
+
+// 4. Checkout System
+function checkout() {
+    if (cart.length === 0) return alert("Your basket is empty!");
+
+    const receipt = window.open('', '_blank');
+    let content = `
+        <div style="font-family:monospace; text-align:center; padding: 20px;">
+            <h2>SmartCart🛒</h2>
+            <p>${new Date().toLocaleString()}</p>
+            <hr>
+            ${cart.map(i => `<p style="display:flex; justify-content:space-between;"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></p>`).join('')}
+            <hr>
+            <h3>TOTAL: $${total.toFixed(2)}</h3>
+            <p>Thank you for shopping!</p>
+        </div>
+    `;
+    receipt.document.write(content);
+    receipt.print();
+
+    // Clear cart after checkout
+    cart = [];
+    total = 0;
+    document.getElementById("cart").innerHTML = "";
+    document.getElementById("total").innerText = "0.00";
+}
+
+// Start once page loads
+window.onload = startScanner;
