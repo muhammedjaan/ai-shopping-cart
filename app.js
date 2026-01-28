@@ -1,5 +1,5 @@
 const products = {
-    "0123456789012": { name: "Fresh Milk", price: 1.50 },
+    "6294011607141": { name: "Lulu iodized refined table salt 700g", price: 4.25 },
     "1234567890123": { name: "Whole Grain Bread", price: 1.00 },
     "2345678901234": { name: "Potato Chips", price: 2.00 },
     "049000028203": { name: "Coca Cola", price: 1.25 } 
