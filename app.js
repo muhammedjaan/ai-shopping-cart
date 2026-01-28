@@ -1,110 +1,38 @@
-/**
- * SmartCart Pro - Science Fair Edition
- * Features: Barcode scanning, Audio/Haptic feedback, Printing
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SmartCart Pro🛒</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>SmartCart Pro🛒</h1>
+    <div id="status-indicator"></div>
+  </header>
 
-// 1. Product Database
-const products = {
-    "0123456789012": { name: "Milk", price: 1.50 },
-    "1234567890123": { name: "Bread", price: 1.00 },
-    "2345678901234": { name: "Chips", price: 2.00 },
-    "0000000000000": { name: "Demo Item", price: 0.01 } // Use for testing
-};
+  <div id="scanner-container">
+    <div id="scanner"></div>
+    <div class="overlay"></div>
+  </div>
 
-let cart = [];
-let total = 0;
-let isPaused = false;
+  <div id="feedback-msg">Initializing Camera...</div>
 
-// 2. Initialize Scanner on Page Load
-document.addEventListener("DOMContentLoaded", () => {
-    startScanner();
-});
+  <section class="cart-section">
+    <h2>Your Basket</h2>
+    <div class="cart-scroll">
+        <ul id="cart"></ul>
+    </div>
+    <div class="total-bar">
+        <h3>Total: $<span id="total">0.00</span></h3>
+        <button id="checkout-btn" onclick="checkout()">Finish & Print</button>
+    </div>
+  </section>
 
-function startScanner() {
-    const feedback = document.getElementById("feedback-msg");
-    
-    Quagga.init({
-        inputStream: {
-            name: "Live",
-            type: "LiveStream",
-            target: document.querySelector("#scanner"),
-            constraints: {
-                // 'ideal' is safer than 'exact' to prevent black screens
-                width: { ideal: 640 },
-                height: { ideal: 480 },
-                facingMode: "environment" 
-            },
-        },
-        decoder: {
-            // Added more readers to support different types of barcodes
-            readers: ["ean_reader", "upc_reader", "code_128_reader", "code_39_reader"]
-        },
-        locate: true
-    }, (err) => {
-        if (err) {
-            console.error(err);
-            feedback.innerText = "Camera Error: Check Permissions";
-            feedback.style.color = "red";
-            return;
-        }
-        console.log("Quagga Ready");
-        Quagga.start();
-        feedback.innerText = "Ready to Scan";
-    });
+  <audio id="beep-sound" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3" preload="auto"></audio>
 
-    Quagga.onDetected(handleDetection);
-}
-
-// 3. Handle the Barcode Logic
-function handleDetection(data) {
-    if (isPaused) return;
-
-    const code = data.codeResult.code;
-    const product = products[code];
-
-    if (product) {
-        addToCart(product);
-        triggerSuccess(product.name);
-    } else {
-        // Optional: Log unknown codes to help you build your database
-        console.log("Unknown Barcode: " + code);
-    }
-}
-
-function addToCart(item) {
-    cart.push(item);
-    total += item.price;
-
-    // Update UI List
-    const cartList = document.getElementById("cart");
-    const li = document.createElement("li");
-    li.style.display = "flex";
-    li.style.justifyContent = "space-between";
-    li.style.padding = "8px";
-    li.style.borderBottom = "1px solid #ddd";
-    li.innerHTML = `<span>${item.name}</span> <strong>$${item.price.toFixed(2)}</strong>`;
-    
-    // Add new items to the top
-    cartList.insertBefore(li, cartList.firstChild);
-
-    // Update Total
-    document.getElementById("total").innerText = total.toFixed(2);
-}
-
-// 4. Feedback (Sound, Vibration, Visual)
-function triggerSuccess(itemName) {
-    isPaused = true;
-    
-    // Play Beep
-    const beep = document.getElementById("beep-sound");
-    if(beep) beep.play().catch(e => console.log("Audio play blocked until user interaction"));
-
-    // Vibrate phone
-    if (navigator.vibrate) navigator.vibrate(100);
-
-    // Visual feedback
-    const msg = document.getElementById("feedback-msg");
-    msg.innerText = `Added ${itemName}!`;
-    msg.style.color = "#2ecc71";
-
-    // Pause for 2.5 seconds so
+  <script src="app.js"></script>
+</body>
+</html>
