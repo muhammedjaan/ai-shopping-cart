@@ -5,7 +5,11 @@ const totalSpan = document.getElementById("total");
 let total = 0;
 let cart = [];
 
-// Fake product database
+// Prevent double scanning
+let lastScanned = "";
+let scanCooldown = false;
+
+// Product database
 const products = {
   "0123456789012": { name: "Milk", price: 1.50 },
   "1234567890123": { name: "Bread", price: 1.00 },
@@ -17,9 +21,10 @@ navigator.mediaDevices.getUserMedia({
   video: { facingMode: "environment" }
 }).then(stream => {
   video.srcObject = stream;
+  startAutoScan();
 });
 
-// Add item
+// Add item to cart
 function addItem(name, price) {
   cart.push({ name, price });
 
@@ -31,21 +36,28 @@ function addItem(name, price) {
   totalSpan.textContent = total.toFixed(2);
 }
 
-// Barcode scanning
+// Auto barcode scanning
 const codeReader = new ZXing.BrowserBarcodeReader();
 
-function startBarcodeScan() {
-  codeReader.decodeOnceFromVideoDevice(null, video)
-    .then(result => {
+function startAutoScan() {
+  codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+    if (result && !scanCooldown) {
       const code = result.text;
 
+      if (code === lastScanned) return;
+
       if (products[code]) {
-        const item = products[code];
-        addItem(item.name, item.price);
-      } else {
-        alert("Unknown product: " + code);
+        addItem(products[code].name, products[code].price);
+        lastScanned = code;
+        scanCooldown = true;
+
+        // Cooldown to avoid multiple scans
+        setTimeout(() => {
+          scanCooldown = false;
+        }, 2000);
       }
-    });
+    }
+  });
 }
 
 // Checkout
@@ -61,7 +73,6 @@ function checkout() {
 
   alert(receipt);
 
-  // Reset
   cart = [];
   total = 0;
   cartList.innerHTML = "";
