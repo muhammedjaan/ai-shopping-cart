@@ -2,21 +2,36 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SmartCart🛒</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SmartCart Pro🛒</title>
   <link rel="stylesheet" href="style.css">
-
-  <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
 </head>
 <body>
+  <header>
+    <h1>SmartCart🛒</h1>
+    <div id="status-light"></div>
+  </header>
 
-  <h1>SmartCart🛒</h1>
+  <div id="scanner-container">
+    <div id="scanner"></div>
+    <div class="overlay"></div> </div>
 
-  <div id="scanner" autoplay muted playsinline></div>
+  <div id="feedback-msg">Scanning...</div>
 
-  <p>Point barcode at camera</p>
+  <section class="cart-section">
+    <h2>Your Basket</h2>
+    <div class="cart-scroll">
+        <ul id="cart"></ul>
+    </div>
+    <div class="total-bar">
+        <h3>Total: $<span id="total">0.00</span></h3>
+        <button id="checkout-btn" onclick="checkout()">Finish & Print</button>
+    </div>
+  </section>
 
-  <h2>Cart</h2>
-  <ul id="c
+  <audio id="beep-sound" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
