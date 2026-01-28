@@ -1,11 +1,9 @@
-const video = document.getElementById("camera");
 const cartList = document.getElementById("cart");
 const totalSpan = document.getElementById("total");
+const video = document.getElementById("camera");
 
 let total = 0;
 let cart = [];
-
-// Prevent double scanning
 let lastScanned = "";
 let scanCooldown = false;
 
@@ -16,15 +14,6 @@ const products = {
   "5080400872": { name: "Keogh's Irish potato chips cheesy onion", price: 2.00 }
 };
 
-// Camera
-navigator.mediaDevices.getUserMedia({
-  video: { facingMode: "environment" }
-}).then(stream => {
-  video.srcObject = stream;
-  startAutoScan();
-});
-
-// Add item to cart
 function addItem(name, price) {
   cart.push({ name, price });
 
@@ -36,11 +25,12 @@ function addItem(name, price) {
   totalSpan.textContent = total.toFixed(2);
 }
 
-// Auto barcode scanning
 const codeReader = new ZXing.BrowserBarcodeReader();
 
-function startAutoScan() {
-  codeReader.decodeFromVideoDevice(null, video, (result, err) => {
+codeReader.decodeFromVideoDevice(
+  null,
+  video,
+  (result, err) => {
     if (result && !scanCooldown) {
       const code = result.text;
 
@@ -51,14 +41,13 @@ function startAutoScan() {
         lastScanned = code;
         scanCooldown = true;
 
-        // Cooldown to avoid multiple scans
         setTimeout(() => {
           scanCooldown = false;
-        }, 2000);
+        }, 2500);
       }
     }
-  });
-}
+  }
+);
 
 // Checkout
 function checkout() {
