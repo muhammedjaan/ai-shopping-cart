@@ -10,14 +10,14 @@ body {
   position: relative;
   width: 90vw;
   max-width: 420px;
-  aspect-ratio: 3 / 4;   /* 🔴 THIS IS THE KEY LINE */
+  aspect-ratio: 3 / 4;
   margin: 20px auto;
   border: 3px solid black;
-  overflow: hidden;
   background: black;
+  overflow: hidden;
 }
 
-/* Force Quagga video + canvas to fill scanner */
+/* Force camera & overlay to fit */
 #scanner video,
 #scanner canvas {
   position: absolute;
@@ -29,9 +29,9 @@ body {
 }
 
 button {
-  padding: 10px;
-  margin: 8px;
+  padding: 10px 16px;
   font-size: 16px;
+  margin: 10px;
 }
 
 ul {
