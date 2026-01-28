@@ -1,11 +1,10 @@
 const cartList = document.getElementById("cart");
 const totalSpan = document.getElementById("total");
-const video = document.getElementById("camera");
 
 let total = 0;
 let cart = [];
 let lastScanned = "";
-let scanCooldown = false;
+let cooldown = false;
 
 // Product database
 const products = {
@@ -25,29 +24,46 @@ function addItem(name, price) {
   totalSpan.textContent = total.toFixed(2);
 }
 
-const codeReader = new ZXing.BrowserBarcodeReader();
-
-codeReader.decodeFromVideoDevice(
-  null,
-  video,
-  (result, err) => {
-    if (result && !scanCooldown) {
-      const code = result.text;
-
-      if (code === lastScanned) return;
-
-      if (products[code]) {
-        addItem(products[code].name, products[code].price);
-        lastScanned = code;
-        scanCooldown = true;
-
-        setTimeout(() => {
-          scanCooldown = false;
-        }, 2500);
-      }
+// Start Quagga
+Quagga.init({
+  inputStream: {
+    name: "Live",
+    type: "LiveStream",
+    target: document.querySelector("#scanner"),
+    constraints: {
+      facingMode: "environment"
     }
+  },
+  decoder: {
+    readers: ["ean_reader", "ean_13_reader", "upc_reader"]
   }
-);
+}, function(err) {
+  if (err) {
+    console.error(err);
+    alert("Camera error");
+    return;
+  }
+  Quagga.start();
+});
+
+// Detect barcode
+Quagga.onDetected(function(result) {
+  if (cooldown) return;
+
+  const code = result.codeResult.code;
+
+  if (code === lastScanned) return;
+
+  if (products[code]) {
+    addItem(products[code].name, products[code].price);
+    lastScanned = code;
+    cooldown = true;
+
+    setTimeout(() => {
+      cooldown = false;
+    }, 2500);
+  }
+});
 
 // Checkout
 function checkout() {
