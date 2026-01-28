@@ -7,22 +7,21 @@
 </head>
 <body>
 
-  <h1>🛒 AI Shopping Cart</h1>
+  <h1>SmartCart</h1>
 
   <video id="camera" autoplay playsinline></video>
 
-  <div>
-    <button onclick="startBarcodeScan()">Scan Barcode</button>
-    <button onclick="readWeight()">Read Weight</button>
-  </div>
+  <button onclick="startBarcodeScan()">Scan Item</button>
 
   <h2>Cart</h2>
   <ul id="cart"></ul>
 
   <h2>Total: $<span id="total">0.00</span></h2>
 
+  <button onclick="checkout()">Checkout</button>
+
+  <!-- Barcode library only -->
   <script src="https://unpkg.com/@zxing/library@latest"></script>
-  <script src="https://unpkg.com/tesseract.js@v4.0.2/dist/tesseract.min.js"></script>
   <script src="app.js"></script>
 
 </body>
