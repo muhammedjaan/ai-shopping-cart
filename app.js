@@ -11,9 +11,9 @@ let scanCooldown = false;
 
 // Product database
 const products = {
-  "0123456789012": { name: "Milk", price: 1.50 },
-  "1234567890123": { name: "Bread", price: 1.00 },
-  "2345678901234": { name: "Chips", price: 2.00 }
+  "294017120781": { name: "Nestle 2 in 1 sugar free NESCAFE", price: 1.25 },
+  "294011607141": { name: "Lulu Refined table salt 700g", price: 4.25 },
+  "5080400872": { name: "Keogh's Irish potato chips cheesy onion", price: 2.00 }
 };
 
 // Camera
