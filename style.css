@@ -2,19 +2,22 @@ body {
   font-family: Arial, sans-serif;
   text-align: center;
   background: #f4f4f4;
+  margin: 0;
+  padding: 0;
 }
 
 #scanner {
   position: relative;
-  width: 90%;
-  max-width: 400px;
-  height: 300px;
-  margin: 10px auto;
+  width: 90vw;
+  max-width: 420px;
+  aspect-ratio: 3 / 4;   /* 🔴 THIS IS THE KEY LINE */
+  margin: 20px auto;
   border: 3px solid black;
   overflow: hidden;
+  background: black;
 }
 
-/* Force Quagga video to stay inside the box */
+/* Force Quagga video + canvas to fill scanner */
 #scanner video,
 #scanner canvas {
   position: absolute;
@@ -27,7 +30,7 @@ body {
 
 button {
   padding: 10px;
-  margin: 5px;
+  margin: 8px;
   font-size: 16px;
 }
 
