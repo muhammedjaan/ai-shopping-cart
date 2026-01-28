@@ -5,19 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>SmartCart Pro🛒</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>SmartCart🛒</h1>
-    <div id="status-light"></div>
+    <h1>SmartCart Pro🛒</h1>
+    <div id="status-indicator"></div>
   </header>
 
   <div id="scanner-container">
     <div id="scanner"></div>
-    <div class="overlay"></div> </div>
+    <div class="overlay"></div>
+  </div>
 
-  <div id="feedback-msg">Scanning...</div>
+  <div id="feedback-msg">Initializing Camera...</div>
 
   <section class="cart-section">
     <h2>Your Basket</h2>
@@ -30,7 +31,7 @@
     </div>
   </section>
 
-  <audio id="beep-sound" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3"></audio>
+  <audio id="beep-sound" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3" preload="auto"></audio>
 
   <script src="app.js"></script>
 </body>
