@@ -2,7 +2,7 @@
 const products = {
     "6294011607141": { name: "Lulu Yogurt Drink", price: 2.50 },
     "1234567890123": { name: "Fresh Bread", price: 1.50 },
-    "0000000000000": { name: "Demo Product", price: 0.10 }
+    "00000000": { name: "Demo Product", price: 0.10 }
     // Add your other 6 barcodes here following the same format
 };
 
