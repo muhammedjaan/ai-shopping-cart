@@ -1,98 +1,85 @@
-:root {
-  --primary: #2ecc71;
-  --dark: #2c3e50;
-}
+:root { --primary: #2ecc71; --dark: #2c3e50; }
 
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
+body { 
+  font-family: 'Segoe UI', sans-serif; 
+  margin: 0; 
+  background: #f4f7f6; 
+  height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
   overflow: hidden;
 }
 
-#scanner-container {
-  position: relative;
-  width: 100%;
-  height: 35vh;
-  background: #000; /* Black background while loading */
-  overflow: hidden;
+#scanner-container { 
+  position: relative; 
+  width: 100%; 
+  height: 40vh; 
+  background: #000; 
 }
 
-/* IMPORTANT: This forces the video to be visible */
 #scanner video {
-  width: 100%;
-  height: 100%;
+  width: 100%; 
+  height: 100%; 
   object-fit: cover;
   display: block;
-}
-
-#scanner canvas {
-  display: none; /* Hide the Quagga debug canvas */
 }
 
 .overlay {
   position: absolute;
   top: 50%; left: 10%;
-  width: 80%; height: 3px;
+  width: 80%; height: 4px;
   background: var(--primary);
-  box-shadow: 0 0 10px var(--primary);
+  box-shadow: 0 0 15px var(--primary);
   z-index: 10;
   pointer-events: none;
-  animation: scanMove 2s infinite ease-in-out;
+  animation: scanLine 2s infinite ease-in-out;
 }
 
-@keyframes scanMove {
-  0%, 100% { top: 20%; }
-  50% { top: 80%; }
+@keyframes scanLine { 
+  0%, 100% { top: 20%; } 
+  50% { top: 80%; } 
 }
 
-.cart-section {
-  flex: 1;
-  padding: 20px;
-  background: white;
-  border-radius: 25px 25px 0 0;
-  margin-top: -20px;
-  z-index: 20;
-  box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-  display: flex;
-  flex-direction: column;
+.cart-section { 
+  flex: 1; 
+  background: white; 
+  border-radius: 30px 30px 0 0; 
+  margin-top: -30px; 
+  z-index: 20; 
+  padding: 20px; 
+  display: flex; 
+  flex-direction: column; 
+  box-shadow: 0 -10px 20px rgba(0,0,0,0.1); 
 }
 
-.cart-scroll {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 10px;
+.cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+.clear-btn { background: #f0f0f0; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; color: #666; }
+
+.cart-scroll { flex: 1; overflow-y: auto; }
+
+li { 
+  display: flex; 
+  justify-content: space-between; 
+  padding: 15px 0; 
+  border-bottom: 1px solid #f0f0f0; 
+  font-size: 1.1rem; 
+  animation: fadeIn 0.3s ease;
 }
 
-li {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  animation: slideIn 0.3s ease-out;
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-@keyframes slideIn {
-  from { transform: translateX(-20px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-.total-bar {
-  border-top: 2px solid #eee;
-  padding-top: 10px;
-}
-
-#checkout-btn {
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 15px;
-  font-size: 1.1rem;
-  border-radius: 12px;
+#checkout-btn { 
+  width: 100%; 
+  background: var(--primary); 
+  color: white; 
+  border: none; 
+  padding: 18px; 
+  border-radius: 15px; 
+  font-size: 1.2rem; 
+  font-weight: bold; 
   cursor: pointer;
-  font-weight: bold;
+  margin-top: 10px;
 }
+
+#status-dot { width: 12px; height: 12px; background: #bbb; border-radius: 50%; display: inline-block; margin-left: 10px; }
