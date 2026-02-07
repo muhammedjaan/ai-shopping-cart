@@ -1,132 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartCart Safe Mode</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin: 0; background: #f0f0f0; }
-    
-    /* THE CAMERA BOX */
-    #camera-box {
-      width: 100%;
-      height: 300px;
-      background: black;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { display: none; } /* Hide debug lines for now to keep it simple */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCart 2.0</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* SCANNER SECTION */
+        #scanner-section { background: black; padding: 20px 0; }
+        #reader { width: 100%; max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; }
+        
+        /* HIDE THE UGLY STOP BUTTON FROM LIBRARY */
+        #reader__dashboard_section_csr button { background: red; color: white; border: none; padding: 5px; margin-top: 10px; }
 
-    /* SCANNING LINE */
-    .laser {
-      position: absolute; top: 50%; left: 5%; width: 90%; height: 2px;
-      background: red; box-shadow: 0 0 5px red;
-      animation: scan 2s infinite;
-      display: none; /* Hidden until camera starts */
-    }
-    @keyframes scan { 0% {top: 10%} 50% {top: 90%} 100% {top: 10%} }
-
-    /* UI ELEMENTS */
-    button {
-      padding: 15px 30px; font-size: 18px; background: #007bff; color: white;
-      border: none; border-radius: 5px; margin: 20px; cursor: pointer;
-    }
-    
-    .output { font-size: 20px; font-weight: bold; margin: 20px; padding: 20px; background: white; }
-    .error-msg { color: red; font-weight: bold; padding: 10px; }
-  </style>
+        /* CART SECTION */
+        .cart-section { flex: 1; background: white; padding: 20px; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; margin-top: -20px; z-index: 10; }
+        
+        h2 { margin: 0 0 10px 0; }
+        ul { flex: 1; list-style: none; padding: 0; overflow-y: auto; }
+        li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 1.1rem; }
+        
+        .total-box { font-size: 1.5rem; font-weight: bold; text-align: center; border-top: 2px solid #333; padding-top: 15px; margin-top: 10px; }
+        
+        .checkout-btn { background: #28a745; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-size: 1.2rem; cursor: pointer; margin-top: 10px; }
+        
+        /* FEEDBACK MESSAGE */
+        #feedback { text-align: center; color: green; font-weight: bold; height: 20px; margin-bottom: 5px; }
+    </style>
 </head>
 <body>
 
-  <h1>SmartCart Debug</h1>
+    <div id="scanner-section">
+        <div id="reader"></div>
+    </div>
 
-  <div id="camera-box">
-    <div class="laser" id="laser-line"></div>
-    <div id="interactive" class="viewport"></div>
-  </div>
+    <div class="cart-section">
+        <div id="feedback"></div>
+        <h2>Your Cart</h2>
+        <ul id="cart-list"></ul>
+        
+        <div class="total-box">Total: $<span id="total-price">0.00</span></div>
+        <button class="checkout-btn" onclick="checkout()">Checkout & Print</button>
+    </div>
 
-  <button onclick="startCamera()" id="start-btn">📸 Start Camera</button>
-  <button onclick="stopCamera()" style="background:#dc3545; display:none;" id="stop-btn">Stop</button>
-
-  <div class="output">
-    Status: <span id="status">Waiting...</span><br>
-    Item: <span id="scanned-item">--</span><br>
-    Price: $<span id="scanned-price">0.00</span>
-  </div>
-
-  <div id="error-log" class="error-msg"></div>
+    <audio id="beep" src="https://assets.mixkit.co/active_storage/sfx/701/701-preview.mp3"></audio>
 
 <script>
-  const products = {
-    "6294011607141": { name: "Lulu Yogurt", price: 2.50 },
-    "1234567890123": { name: "Test Item", price: 1.00 }
-  };
+    // --- 1. CONFIGURATION ---
+    const products = {
+        "6294011607141": { name: "Lulu Yogurt Drink", price: 2.50 },
+        "1234567890123": { name: "Test Item", price: 1.00 }
+    };
 
-  function startCamera() {
-    document.getElementById("status").innerText = "Initializing...";
-    document.getElementById("error-log").innerText = "";
+    let cart = [];
+    let total = 0;
+    let lastScanTime = 0;
 
-    Quagga.init({
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: document.querySelector('#interactive'),
-        constraints: {
-          // SIMPLEST POSSIBLE SETTINGS
-          facingMode: "environment", 
-          width: 640,
-          height: 480
+    // --- 2. SCAN SUCCESS FUNCTION ---
+    function onScanSuccess(decodedText, decodedResult) {
+        // Prevent double scanning (2 second cooldown)
+        const now = new Date().getTime();
+        if (now - lastScanTime < 2000) return;
+        lastScanTime = now;
+
+        // CHECK DATABASE
+        let item = products[decodedText];
+
+        // UNKNOWN ITEM RULE ($4.98)
+        if (!item) {
+            item = { name: "Unrecognized Item", price: 4.98 };
         }
-      },
-      decoder: {
-        readers: ["ean_reader", "upc_reader"] // Focused on standard barcodes
-      },
-      locate: true
-    }, function(err) {
-      if (err) {
-        document.getElementById("error-log").innerText = "Error: " + err.name + " (Check Permissions!)";
-        document.getElementById("status").innerText = "Failed";
-        return;
-      }
-      
-      // Success!
-      Quagga.start();
-      document.getElementById("status").innerText = "Scanning...";
-      document.getElementById("laser-line").style.display = "block";
-      document.getElementById("start-btn").style.display = "none";
-      document.getElementById("stop-btn").style.display = "inline-block";
-    });
 
-    // LISTENER
-    Quagga.onDetected(function(result) {
-      const code = result.codeResult.code;
-      let item = products[code];
+        // ADD TO CART
+        cart.push(item);
+        total += item.price;
 
-      // Unknown Item Logic
-      if (!item) {
-        item = { name: "Unknown", price: 4.98 };
-      }
+        // UPDATE HTML
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${item.name}</span> <b>$${item.price.toFixed(2)}</b>`;
+        document.getElementById("cart-list").prepend(li);
+        document.getElementById("total-price").innerText = total.toFixed(2);
 
-      document.getElementById("scanned-item").innerText = item.name;
-      document.getElementById("scanned-price").innerText = item.price.toFixed(2);
-      document.getElementById("status").innerText = "FOUND: " + code;
-      
-      // Visual feedback: Flash the background green
-      document.body.style.background = "#d4edda";
-      setTimeout(() => { document.body.style.background = "#f0f0f0"; }, 500);
-    });
-  }
+        // FEEDBACK
+        document.getElementById("feedback").innerText = `Scanned: ${item.name}`;
+        document.getElementById("beep").play().catch(e => console.log("Click page to enable audio"));
+        if (navigator.vibrate) navigator.vibrate(200);
 
-  function stopCamera() {
-    Quagga.stop();
-    document.getElementById("status").innerText = "Stopped";
-    document.getElementById("laser-line").style.display = "none";
-    document.getElementById("start-btn").style.display = "inline-block";
-    document.getElementById("stop-btn").style.display = "none";
-  }
+        // Clear feedback message after 2s
+        setTimeout(() => { document.getElementById("feedback").innerText = ""; }, 2000);
+    }
+
+    // --- 3. START THE SCANNER ---
+    // This builds the UI automatically!
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 }, // The scanning box size
+            aspectRatio: 1.0
+        },
+        /* verbose= */ false
+    );
+    
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // --- 4. CHECKOUT ---
+    function checkout() {
+        if(cart.length === 0) return alert("Cart is empty");
+        alert("Printing Receipt...\nTotal: $" + total.toFixed(2));
+        location.reload();
+    }
 </script>
 
 </body>
