@@ -9,19 +9,21 @@
 </head>
 <body>
   <header>
-    <h1>SmartCart Pro🛒</h1>
-    <div id="status-indicator"></div>
+    <h1>SmartCart🛒</h1>
+    <div id="status-dot"></div>
   </header>
 
   <div id="scanner-container">
     <div id="scanner"></div>
-    <div class="overlay"></div>
-  </div>
+    <div class="overlay"></div> </div>
 
-  <div id="feedback-msg">Initializing Camera...</div>
+  <div id="feedback-msg">Align barcode to scan...</div>
 
   <section class="cart-section">
-    <h2>Your Basket</h2>
+    <div class="cart-header">
+        <h2>Basket</h2>
+        <button onclick="clearCart()" class="clear-btn">Reset Cart</button>
+    </div>
     <div class="cart-scroll">
         <ul id="cart"></ul>
     </div>
