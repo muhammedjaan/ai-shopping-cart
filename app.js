@@ -1,118 +1,127 @@
+// 1. Database of your sample products
 const products = {
-    "6294011607141": { name: "Lulu iodized refined table salt 700g", price: 4.25 },
-    "1234567890123": { name: "Whole Grain Bread", price: 1.00 },
-    "2345678901234": { name: "Potato Chips", price: 2.00 },
-    "049000028203": { name: "Coca Cola", price: 1.25 } 
+    "6294011607141": { name: "Lulu Yogurt Drink", price: 2.50 },
+    "1234567890123": { name: "Fresh Bread", price: 1.50 },
+    "0000000000000": { name: "Demo Product", price: 0.10 }
+    // Add your other 6 barcodes here following the same format
 };
 
 let cart = [];
 let total = 0;
 let isPaused = false;
 
-// 1. Initialize with Fallback logic
-function startScanner() {
+// 2. Camera Configuration
+function initScanner() {
     Quagga.init({
         inputStream: {
             name: "Live",
             type: "LiveStream",
             target: document.querySelector("#scanner"),
             constraints: {
-                // If 'environment' fails, the browser will fall back to any available camera
-                facingMode: "environment", 
+                facingMode: "environment", // Uses back camera
                 width: { ideal: 1280 },
                 height: { ideal: 720 }
             },
-            willReadFrequently: true
+        },
+        locator: {
+            patchSize: "medium",
+            halfSample: false // Higher precision for small barcodes
         },
         decoder: {
             readers: ["ean_reader", "upc_reader", "code_128_reader"]
-        }
-    }, function(err) {
+        },
+        locate: true
+    }, (err) => {
         if (err) {
-            console.error("Quagga Startup Error:", err);
-            document.getElementById("feedback-msg").innerText = "Camera Error: Please Refresh & Allow Access";
+            document.getElementById("feedback-msg").innerText = "Camera Access Denied";
             return;
         }
         Quagga.start();
-        document.getElementById("feedback-msg").innerText = "Ready to Scan";
+        document.getElementById("status-dot").style.background = "#2ecc71"; // Green means ready
     });
 
     Quagga.onDetected(handleScan);
 }
 
-// 2. Scan Logic
+// 3. Scanning Logic & Recognition
 function handleScan(data) {
     if (isPaused) return;
 
     const code = data.codeResult.code;
-    const item = products[code];
+    let item = products[code];
 
-    if (item) {
-        addtoBasket(item);
-        showFeedback(item.name);
+    // Check if the item is recognized; otherwise, use the default price of 4.98
+    if (!item) {
+        item = { 
+            name: `Unknown Item (${code})`, 
+            price: 4.98 
+        };
     }
-}
 
-function addtoBasket(item) {
     cart.push(item);
     total += item.price;
+    updateUI(item.name, item.price);
+    playFeedback(item.name);
+}
 
+function updateUI(name, price) {
     const list = document.getElementById("cart");
     const li = document.createElement("li");
-    li.innerHTML = `<span>${item.name}</span> <strong>$${item.price.toFixed(2)}</strong>`;
-    list.prepend(li); // New items at the top
-
+    li.innerHTML = `<span>${name}</span> <b>$${price.toFixed(2)}</b>`;
+    list.prepend(li); // New items appear at the top
     document.getElementById("total").innerText = total.toFixed(2);
 }
 
-// 3. Audio & Visual Feedback
-function showFeedback(name) {
-    isPaused = true;
+function playFeedback(name) {
+    isPaused = true; // Stop scanning for 2.5 seconds to avoid duplicates
     
-    // Play beep
+    // Play beep sound
     const beep = document.getElementById("beep-sound");
     beep.currentTime = 0;
-    beep.play().catch(() => console.log("Sound interaction required"));
+    beep.play().catch(() => {});
 
-    // Phone vibration
+    // Vibrate phone
     if (navigator.vibrate) navigator.vibrate(100);
 
     const msg = document.getElementById("feedback-msg");
-    msg.innerText = `Added ${name}!`;
+    msg.innerText = `Added: ${name}`;
     msg.style.color = "#2ecc71";
 
     setTimeout(() => {
         isPaused = false;
-        msg.innerText = "Scanning...";
-        msg.style.color = "inherit";
-    }, 2000);
+        msg.innerText = "Align barcode to scan...";
+        msg.style.color = "#666";
+    }, 2500); 
 }
 
-// 4. Checkout System
-function checkout() {
-    if (cart.length === 0) return alert("Your basket is empty!");
-
-    const receipt = window.open('', '_blank');
-    let content = `
-        <div style="font-family:monospace; text-align:center; padding: 20px;">
-            <h2>SmartCart🛒</h2>
-            <p>${new Date().toLocaleString()}</p>
-            <hr>
-            ${cart.map(i => `<p style="display:flex; justify-content:space-between;"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></p>`).join('')}
-            <hr>
-            <h3>TOTAL: $${total.toFixed(2)}</h3>
-            <p>Thank you for shopping!</p>
-        </div>
-    `;
-    receipt.document.write(content);
-    receipt.print();
-
-    // Clear cart after checkout
+// 4. Reset & Checkout Functions
+function clearCart() {
     cart = [];
     total = 0;
     document.getElementById("cart").innerHTML = "";
     document.getElementById("total").innerText = "0.00";
 }
 
-// Start once page loads
-window.onload = startScanner;
+function checkout() {
+    if (cart.length === 0) return alert("Your basket is empty!");
+    
+    // Create a printable receipt window
+    const w = window.open('', '_blank');
+    w.document.write(`
+        <div style="text-align:center; font-family:monospace; padding: 20px; border: 1px dashed #000;">
+            <h1>SmartCart🛒 Receipt</h1>
+            <p>${new Date().toLocaleString()}</p>
+            <hr>
+            ${cart.map(i => `<div style="display:flex; justify-content:space-between;"><span>${i.name}</span><span>$${i.price.toFixed(2)}</span></div>`).join('')}
+            <hr>
+            <h2>TOTAL: $${total.toFixed(2)}</h2>
+            <p>Thank you for shopping!</p>
+        </div>
+    `);
+    w.document.close();
+    w.print();
+    clearCart(); // Auto-reset after printing
+}
+
+// Kick off the scanner when the page finishes loading
+window.onload = initScanner;
